@@ -85,10 +85,10 @@ namespace PasswordManager
         }
         private DataColumn[] CreatePasswordDataColumns()
         {
-            DataColumn websiteOrService = new DataColumn
+            DataColumn Service = new DataColumn
             {
-                ColumnName = "Website / Service",
-                Caption = "Website / Service",
+                ColumnName = "Service",
+                Caption = "Service",
                 AllowDBNull = false,
                 DataType = System.Type.GetType("System.String"),
                 DefaultValue = String.Empty,
@@ -142,26 +142,46 @@ namespace PasswordManager
                 DefaultValue = String.Empty,
             };
 
-            return new DataColumn[] { websiteOrService, password, url, user, comments/*, othersExisting, other*/};
+            return new DataColumn[] { Service, password, url, user, comments/*, othersExisting, other*/};
         }
 
         #endregion
         #region IO
 
-        public void AddEntry()
-        {
-
-        }
-
-        public void RemoveEntry(int index)
+        private void AddEntry(DataRow dataRow)
         {
             DataTable tmpPwTbl = data.Tables[PasswordDataTableName];
-            tmpPwTbl.Rows.RemoveAt(index);
+            tmpPwTbl.Rows.Add(dataRow);
         }
-
-        public void EditEntry()
+        private void InsertEntry(DataRow dataRow, int rowIndex)
         {
+            if (!PwTblRowIndexIsValid(rowIndex)) return;
+            DataTable tmpPwTbl = data.Tables[PasswordDataTableName];
+            tmpPwTbl.Rows.InsertAt(dataRow, rowIndex);
+        }
+        public void RemoveEntry(int rowIndex)
+        {
+            if (!PwTblRowIndexIsValid(rowIndex)) return;
+            DataTable tmpPwTbl = data.Tables[PasswordDataTableName];
+            tmpPwTbl.Rows.RemoveAt(rowIndex);
+        }
+        public void DuplicateEntry(int rowIndex)
+        {
+            // Add out of bounds-warnings (or just dont prompt them to the user?)
+            DataTable tmpPwTbl = data.Tables[PasswordDataTableName];
+            if (!PwTblRowIndexIsValid(rowIndex)) return;
 
+            // Get row which shall be cloned
+            var toCloneRow = tmpPwTbl.Rows[rowIndex].ItemArray;
+            List<string> itemArray = new List<string>();
+            foreach(object item in toCloneRow)
+            {
+                itemArray.Add(item.ToString());
+            }
+            // Add copied row to DataTable
+            DataRow clonedRow = tmpPwTbl.NewRow();
+            clonedRow.ItemArray = itemArray.ToArray();
+            tmpPwTbl.Rows.InsertAt(clonedRow, rowIndex);
         }
 
         public DataTable GetPasswordDataTable()
@@ -198,15 +218,24 @@ namespace PasswordManager
 
         #endregion
         #region Other
-
         public override string ToString()
         {
             StringBuilder content = new StringBuilder();
             DataTable pwDataTableHandle = this.data.Tables[PasswordDataTableName];
 
+            // Get table column header
+            var tmpHeaderNames = new StringBuilder();
+            foreach (DataColumn column in pwDataTableHandle.Columns)
+            {
+                tmpHeaderNames.Append(String.Format("{0,-25} ", column.ColumnName));
+            }
+            content.AppendLine(tmpHeaderNames.ToString());
+            content.AppendLine();
+
+            // Get data from table
             foreach (DataRow row in pwDataTableHandle.Rows)
             {
-                var tmpRowCells = new List<String>();
+                var tmpRowCells = new List<string>();
                 foreach (DataColumn col in pwDataTableHandle.Columns)
                 {
                     tmpRowCells.Add(Convert.ToString(row[col.ColumnName]));
@@ -219,6 +248,15 @@ namespace PasswordManager
                 content.AppendLine(tmpRow.ToString());
             }
             return content.ToString();
+        }
+
+        /// <summary>Checks if the entered rowIndex is valid in the password data table</summary>
+        /// <param name="rowIndex">The index of the row in question.</param>
+        /// <returns><c>true</c> when the index is valid, <c>false</c> when its not.</returns>
+        private bool PwTblRowIndexIsValid(int rowIndex)
+        {
+            int rowCount = data.Tables[PasswordDataTableName].Rows.Count;
+            return !(rowIndex >= rowCount || rowIndex < 0);
         }
 
         #endregion

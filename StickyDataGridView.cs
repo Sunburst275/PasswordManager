@@ -33,7 +33,6 @@ namespace PasswordManager
                 innerBindingSource.DataSource = _Source;
                 DataSource = innerBindingSource;
             }
-
         }
         #endregion
         #region Delegates, Events, etc.
@@ -43,8 +42,16 @@ namespace PasswordManager
         {
             this.parent = parent;
             this.parent.SizeChanged += Parent_SizeChanged;
+            this.CellValueChanged += StickyDataGridView_CellValueChanged;
             InitializeCustom();
+            InitializeDebug();
         }
+
+        private void StickyDataGridView_CellValueChanged(object sender, DataGridViewCellEventArgs e)
+        {
+            StickToParentBoundaries();
+        }
+
         public StickyDataGridView(ref SplitContainer parent, DataTable source) : this(ref parent)
         {
             this.Source = source;
@@ -56,7 +63,7 @@ namespace PasswordManager
 
         private void Parent_SizeChanged(object sender, EventArgs e)
         {
-            Console.WriteLine("Registered parent size change");
+            StickToParentBoundaries();
         }
 
         private void InitializeCustom()
@@ -65,9 +72,7 @@ namespace PasswordManager
 
             this.Visible = true;
             this.Enabled = true;
-
         }
-
         private void InitializeGUI()
         {
             // Appearance
@@ -79,8 +84,9 @@ namespace PasswordManager
             ShowCellToolTips = true;
             // Behavior
             AllowDrop = true;
+            AllowUserToResizeColumns = false;
             AllowUserToOrderColumns = true;
-            ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.AutoSize;
+            ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.DisableResizing;
             EditMode = DataGridViewEditMode.EditOnKeystrokeOrF2;
             MultiSelect = true;
             SelectionMode = DataGridViewSelectionMode.CellSelect;
@@ -89,9 +95,62 @@ namespace PasswordManager
             // Layout
             Anchor = AnchorStyles.Top | AnchorStyles.Left;
             Dock = DockStyle.Fill;
+
+            this.ScrollBars = ScrollBars.Both;
+
+            StickToParentBoundaries();
+        }
+        private void InitializeDebug()
+        {
+            //this.BackgroundColor = Color.Red;
+        }
+        #endregion
+        #region Control
+
+        public void StickToParentBoundaries()
+        {
+
+            if (this.Columns.Count <= 0) return;
+
+            // Get parent size
+            var pWidth = parent.Width;
+            var pHeight = parent.Height;
+
+            // -----< Columns >------------------ 
+            // Calculate column widths
+            //var minWidth = (pWidth / this.Columns.Count);
+
+            // Apply columnwidths
+            int accumulatedWidth = 0;
+            foreach(DataGridViewColumn col in this.Columns)
+            {
+                if(col.Width < col.MinimumWidth)
+                {
+                    col.Width = col.MinimumWidth;
+                }
+                accumulatedWidth += col.Width;
+            }
+            // Set last column length to rest of the parent width
+            var lastColWidth = this.Columns[this.Columns.Count - 1].Width;
+            this.Columns[this.Columns.Count - 1].Width = pWidth - (accumulatedWidth - lastColWidth) - this.RowHeadersWidth; // TODO: Include width of the first header (upper left corner stuff)
+            // -----< Rows >--------------------- 
+            //int accumulatedHeight = 0;
+            //foreach(DataGridViewRow row in this.Rows)
+            //{
+            //    if(row.Height < row.MinimumHeight)
+            //    {
+            //        row.Height = row.MinimumHeight;
+            //    }
+            //    accumulatedHeight += row.Height;
+            //}
+
+            //// Set last row length to rest of the parent height
+            //var lastRowHeight = this.Rows[this.Rows.Count - 1].Height;
+            //this.Rows[this.Rows.Count - 1].Height = pHeight - (accumulatedHeight - lastRowHeight);
         }
 
-        #endregion
 
+
+        #endregion
     }
 }

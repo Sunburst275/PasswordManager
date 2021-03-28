@@ -11,9 +11,13 @@ using System.Windows.Forms;
 namespace PasswordManager
 {
 
-    // TODO: DataGridView als readonly machen.
-    // TODO: Das Panel1 vom SplitContainer ist dafuer da, dass man da die Daten, die man Anwaehlt, aendern und bearbeiten kann.
     // TODO: DataStorage erstellen
+    // TODO: Make DataStorage serializable
+    // TODO: Settings erstellen (Registry)
+    // TODO: Languages
+    // TODO: Import/Export (XML, txt, csv)
+    // TODO: Save/Load (Serializable)
+    // TODO: Command line args
 
     public partial class MainForm : Form
     {
@@ -25,7 +29,7 @@ namespace PasswordManager
         #region Delegates, Events, etc.
         #endregion
         #region GIO components
-        StickyDataGridView DataGridView;
+        StickyDataGridView dataGrid;
         #endregion
         #region Constructor, Initialization, etc.
 
@@ -39,27 +43,32 @@ namespace PasswordManager
             // Create PasswordStorage
             data = new PasswordStorage();
             InitializeDataGridView();
-            InitializePanel1();
+            InitializeMainSplitContainer();
+            this.dataGrid.StickToParentBoundaries();
+
             // ...
         }
 
         private void InitializeDataGridView()
         {
-            this.DataGridView = new StickyDataGridView(ref MainSplitContainer);
-            // Bind PasswordStorage to DataGridView
-            //BindingSource bindingSource = new BindingSource();
-            //bindingSource.DataSource = data.GetPasswordDataTable();
-            //this.DataGridView.DataSource = bindingSource;
-
-            this.DataGridView.Source = data.GetPasswordDataTable();
+            this.dataGrid = new StickyDataGridView(ref MainSplitContainer)
+            {
+                Source = data.GetPasswordDataTable()
+            };
+            this.dataGrid.StickToParentBoundaries();
+                // Bind PasswordStorage to DataGridView
+                //BindingSource bindingSource = new BindingSource();
+                //bindingSource.DataSource = data.GetPasswordDataTable();
+                //this.DataGridView.DataSource = bindingSource;
 
             //this.DataGridView.Columns["Other"].Visible = false;
         }
 
-        private void InitializePanel1()
+        private void InitializeMainSplitContainer()
         {
             this.MainSplitContainer.BorderStyle = BorderStyle.FixedSingle;
             this.MainSplitContainer.Panel2Collapsed = true;
+            this.MainSplitContainer.Panel1.Controls.Add(this.dataGrid);
         }
         #endregion
 
@@ -75,7 +84,7 @@ namespace PasswordManager
         {
 
         }
-
+        #region Save/Load (Serialization)
         private void MenuFileLoad_Click(object sender, EventArgs e)
         {
 
@@ -90,11 +99,18 @@ namespace PasswordManager
         {
 
         }
+        #endregion
+        #region Import/Export
+        private void FileMenuImport_Click(object sender, EventArgs e)
+        {
+
+        }
 
         private void MenuFileExport_Click(object sender, EventArgs e)
         {
 
         }
+        #endregion
 
         private void MenuFileExit_Click(object sender, EventArgs e)
         {
@@ -102,7 +118,20 @@ namespace PasswordManager
 
             Application.Exit();
         }
+
+        private void MenuEditDuplicate_Click(object sender, EventArgs e)
+        {
+            data.DuplicateEntry(dataGrid.CurrentRow.Index);
+        }
+
+        private void MenuEditRemove_Click(object sender, EventArgs e)
+        {
+            // TODO: Warning, this removes this row
+
+            data.RemoveEntry(dataGrid.CurrentRow.Index);
+        }
         #endregion
 
+        
     }
 }
