@@ -19,6 +19,7 @@ namespace PasswordManager
         private BindingSource innerBindingSource;
         #endregion
         #region Properties
+        
         private DataTable _Source;
         public DataTable Source
         {
@@ -28,12 +29,14 @@ namespace PasswordManager
             }
             set
             {
+                _Source = null;
                 _Source = value;
                 innerBindingSource = new BindingSource();
                 innerBindingSource.DataSource = _Source;
                 DataSource = innerBindingSource;
             }
         }
+
         #endregion
         #region Delegates, Events, etc.
         #endregion
@@ -109,7 +112,6 @@ namespace PasswordManager
 
         public void StickToParentBoundaries()
         {
-
             if (this.Columns.Count <= 0) return;
 
             // Get parent size
@@ -148,8 +150,6 @@ namespace PasswordManager
             //var lastRowHeight = this.Rows[this.Rows.Count - 1].Height;
             //this.Rows[this.Rows.Count - 1].Height = pHeight - (accumulatedHeight - lastRowHeight);
         }
-
-
 
         #endregion
     }

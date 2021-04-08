@@ -4,6 +4,9 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Data;
+using System.IO;
+using System.Xml;
+using System.Windows.Forms;
 
 namespace PasswordManager
 {
@@ -14,12 +17,27 @@ namespace PasswordManager
         const string MetaDataTableName = "MetaData";
         const string PasswordDataTableName = "PasswordData";
         #endregion
+        #region Properties
+        public DataSet DataSource 
+        { 
+            get 
+            { 
+                return data; 
+            } 
+            set
+            {
+                this.data = value;
+                DataSourceChanged?.Invoke(this, new DataSourceEventArgs(this.data.Tables[PasswordDataTableName]));
+            } 
+        }
+        #endregion
         #region Variables
         private DataSet data;
         #endregion
         #region Delegates, Events, etc.
+        public delegate void DataSourceChangedEventHandler(object sender, DataSourceEventArgs e);
+        public event DataSourceChangedEventHandler DataSourceChanged;
         #endregion
-
 
         //DataTable passwordData; // Data table for all password stuff
         //DataTable metaData;     // Metadata (whatever might be needed)
@@ -53,7 +71,6 @@ namespace PasswordManager
             DataTable tmpPwTbl = data.Tables[1];
             tmpPwTbl.Rows.Add(new object[] { "Test1", "Test2", "Test3", "Test4", "Test5" });
             tmpPwTbl.Rows.Add(new object[] { "Google", "Kaggne123", "google.de", "Tomboy", "This is a test" });
-
         }
         private DataTable CreateMetaDataTable()
         {
@@ -72,11 +89,10 @@ namespace PasswordManager
             dummy.ReadOnly = true;
 
             tmpMetaDataTable.Columns.Add(dummy);
-            tmpMetaDataTable.Rows.Add("DummyVal, kk?");
+            tmpMetaDataTable.Rows.Add("Dummy");
 
             return tmpMetaDataTable;
         }
-
         private DataTable CreatePasswordDataTable()
         {
             DataTable tmpPasswordDataTable = new DataTable(PasswordDataTableName);
@@ -174,7 +190,7 @@ namespace PasswordManager
             // Get row which shall be cloned
             var toCloneRow = tmpPwTbl.Rows[rowIndex].ItemArray;
             List<string> itemArray = new List<string>();
-            foreach(object item in toCloneRow)
+            foreach (object item in toCloneRow)
             {
                 itemArray.Add(item.ToString());
             }
@@ -183,7 +199,6 @@ namespace PasswordManager
             clonedRow.ItemArray = itemArray.ToArray();
             tmpPwTbl.Rows.InsertAt(clonedRow, rowIndex);
         }
-
         public DataTable GetPasswordDataTable()
         {
             return data.Tables[PasswordDataTableName];
@@ -192,29 +207,112 @@ namespace PasswordManager
         {
             return data.Tables[MetaDataTableName];
         }
-
         #endregion
         #region File IO
         // Export
-
-        public void ExportToCsv(string FilePath, string FileName)
+        public void ExportToCsv(string FilePathAndName)
         {
-
+            bool retry = false;
+            do
+            {
+                retry = false;
+                try
+                {
+                    using (FileStream file = new FileStream(FilePathAndName, FileMode.Create))
+                    {
+                        using (StreamWriter writer = new StreamWriter(file))
+                        {
+                            writer.Write(this.ToCsvFormat());
+                        }
+                    }
+                }
+                catch (Exception)
+                {
+                    var response = MessageBox.Show("An error occured during writing the file", "Couldnt write file", MessageBoxButtons.RetryCancel, MessageBoxIcon.Error);
+                    retry = (response == DialogResult.Retry);
+                }
+            } while (retry);
         }
-        public void ExportToXml(string FilePath, string FileName)
+        public void ExportToXml(string FilePathAndName)
         {
-
+            bool retry = false;
+            do
+            {
+                retry = false;
+                try
+                {
+                    using (FileStream file = new FileStream(FilePathAndName, FileMode.Create))
+                    {
+                        this.data.WriteXml(file);
+                    }
+                }
+                catch (Exception)
+                {
+                    var response = MessageBox.Show("An error occured during writing the file", "Couldn't write file", MessageBoxButtons.RetryCancel, MessageBoxIcon.Error);
+                    retry = (response == DialogResult.Retry);
+                }
+            } while (retry);
         }
-        public void ExportToTxt(string FilePath, string FileName)
+        public void ExportToTxt(string FilePathAndName)
         {
-
+            bool retry = false;
+            do
+            {
+                retry = false;
+                try
+                {
+                    using (FileStream file = new FileStream(FilePathAndName, FileMode.Create))
+                    {
+                        using (StreamWriter writer = new StreamWriter(file))
+                        {
+                            writer.Write(this.ToString());
+                        }
+                    }
+                }
+                catch (Exception)
+                {
+                    var response = MessageBox.Show("An error occured during writing the file", "Couldn't write file", MessageBoxButtons.RetryCancel, MessageBoxIcon.Error);
+                    retry = (response == DialogResult.Retry);
+                }
+            } while (retry);
         }
 
         // Import
         public void ImportFromXml(string FilePathAndName)
         {
+            bool retry;
+            DataSet tmpDataSet = new DataSet();
+            do
+            {
+                retry = false;
+                try
+                {
+                    using (FileStream file = new FileStream(FilePathAndName, FileMode.Open))
+                    {
+                        tmpDataSet.ReadXml(file);
+                    }
+                }
+                catch (Exception)
+                {
+                    var response = MessageBox.Show("An error occured during importing the file", "Couldn't import data", MessageBoxButtons.RetryCancel, MessageBoxIcon.Error);
+                    retry = (response == DialogResult.Retry);
+                }
+            } while (retry);
 
+            Console.WriteLine("Finished import:");
+            Console.WriteLine(tmpDataSet.ToString());
+
+            this.Clear();
+            this.DataSource = tmpDataSet;
+            Console.WriteLine("this.data = tmpDataSet:");
+            Console.WriteLine(this.ToString());
         }
+        
+        // Save
+        // ...
+        
+        // Load
+        // ...
 
         #endregion
         #region Other
@@ -223,11 +321,26 @@ namespace PasswordManager
             StringBuilder content = new StringBuilder();
             DataTable pwDataTableHandle = this.data.Tables[PasswordDataTableName];
 
+            // Get max cell content length
+            int maxContentLength = 0;
+            foreach (DataRow row in pwDataTableHandle.Rows)
+            {
+                foreach (DataColumn col in pwDataTableHandle.Columns)
+                {
+                    int tmpLength = row[col.ColumnName].ToString().Length;
+                    if (tmpLength > maxContentLength)
+                    {
+                        maxContentLength = tmpLength;
+                    }
+                }
+            }
+            string FormatString = "{" + "0," + "-" + RoundToNextDecade(maxContentLength) + "} ";
+
             // Get table column header
             var tmpHeaderNames = new StringBuilder();
             foreach (DataColumn column in pwDataTableHandle.Columns)
             {
-                tmpHeaderNames.Append(String.Format("{0,-25} ", column.ColumnName));
+                tmpHeaderNames.Append(String.Format(FormatString, column.ColumnName));
             }
             content.AppendLine(tmpHeaderNames.ToString());
             content.AppendLine();
@@ -243,9 +356,36 @@ namespace PasswordManager
                 var tmpRow = new StringBuilder();
                 foreach (string s in tmpRowCells)
                 {
-                    tmpRow.Append(String.Format("{0,-25} ", s));
+                    tmpRow.Append(String.Format(FormatString, s));
                 }
                 content.AppendLine(tmpRow.ToString());
+            }
+            return content.ToString();
+        }
+
+        private string ToCsvFormat()
+        {
+            StringBuilder content = new StringBuilder();
+            DataTable pwDataTableHandle = this.data.Tables[PasswordDataTableName];
+
+            // Get table column header
+            List<string> tmpHeaderNames = new List<string>();
+            foreach (DataColumn column in pwDataTableHandle.Columns)
+            {
+                tmpHeaderNames.Add(column.ColumnName);
+            }
+            content.AppendLine(string.Join(";", tmpHeaderNames));
+
+            // Get data from table
+            foreach (DataRow row in pwDataTableHandle.Rows)
+            {
+                var tmpRowCells = new List<string>();
+                foreach (DataColumn col in pwDataTableHandle.Columns)
+                {
+                    tmpRowCells.Add(Convert.ToString(row[col.ColumnName]));
+                }
+
+                content.AppendLine(string.Join(";", tmpRowCells));
             }
             return content.ToString();
         }
@@ -258,7 +398,20 @@ namespace PasswordManager
             int rowCount = data.Tables[PasswordDataTableName].Rows.Count;
             return !(rowIndex >= rowCount || rowIndex < 0);
         }
+        /// <summary>Returns the to the next decade ceiled value of the input value.</summary>
+        public static int RoundToNextDecade(int value)
+        {
+            return (int)((Math.Ceiling(value / 10.0)) * 10.0);
+        }
 
         #endregion
+    }
+    public class DataSourceEventArgs : EventArgs
+    {
+        public DataTable dataTable;
+        public DataSourceEventArgs(DataTable dataTable)
+        {
+            this.dataTable = dataTable;
+        }
     }
 }
