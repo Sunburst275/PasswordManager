@@ -1,34 +1,34 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Data;
 using System.IO;
+using System.Text;
 using System.Xml;
 using System.Windows.Forms;
 
 namespace PasswordManager
 {
+    [Serializable()]
     class PasswordStorage
     {
         #region Constants
         const string DataContainerName = "PasswordManagerData";
         const string MetaDataTableName = "MetaData";
         const string PasswordDataTableName = "PasswordData";
+        const string TEMP_TEST_MASTERKEY = "[1234567890)--{";
         #endregion
         #region Properties
-        public DataSet DataSource 
-        { 
-            get 
-            { 
-                return data; 
-            } 
+        public DataSet DataSource
+        {
+            get
+            {
+                return data;
+            }
             set
             {
                 this.data = value;
                 DataSourceChanged?.Invoke(this, new DataSourceEventArgs(this.data.Tables[PasswordDataTableName]));
-            } 
+            }
         }
         #endregion
         #region Variables
@@ -68,9 +68,9 @@ namespace PasswordManager
             data.Tables.Add(CreatePasswordDataTable());
 
             // Test stuff
-            DataTable tmpPwTbl = data.Tables[1];
-            tmpPwTbl.Rows.Add(new object[] { "Test1", "Test2", "Test3", "Test4", "Test5" });
-            tmpPwTbl.Rows.Add(new object[] { "Google", "Kaggne123", "google.de", "Tomboy", "This is a test" });
+            //DataTable tmpPwTbl = data.Tables[1];
+            //tmpPwTbl.Rows.Add(new object[] { "Test1", "Test2", "Test3", "Test4", "Test5" });
+            //tmpPwTbl.Rows.Add(new object[] { "Google", "Kaggne123", "google.de", "Tomboy", "This is a test" });
         }
         private DataTable CreateMetaDataTable()
         {
@@ -210,7 +210,7 @@ namespace PasswordManager
         #endregion
         #region File IO
         // Export
-        public void ExportToCsv(string FilePathAndName)
+        public void ExportToCsvFile(string FilePathAndName)
         {
             bool retry = false;
             do
@@ -233,7 +233,7 @@ namespace PasswordManager
                 }
             } while (retry);
         }
-        public void ExportToXml(string FilePathAndName)
+        public void ExportToXmlFile(string FilePathAndName)
         {
             bool retry = false;
             do
@@ -253,7 +253,7 @@ namespace PasswordManager
                 }
             } while (retry);
         }
-        public void ExportToTxt(string FilePathAndName)
+        public void ExportToTxtFile(string FilePathAndName)
         {
             bool retry = false;
             do
@@ -278,7 +278,7 @@ namespace PasswordManager
         }
 
         // Import
-        public void ImportFromXml(string FilePathAndName)
+        public void ImportFromXmlFile(string FilePathAndName)
         {
             bool retry;
             DataSet tmpDataSet = new DataSet();
@@ -307,13 +307,103 @@ namespace PasswordManager
             Console.WriteLine("this.data = tmpDataSet:");
             Console.WriteLine(this.ToString());
         }
-        
+        public void ImportFromXmlString(string xml_string)
+        {
+            bool retry;
+            DataSet tmpDataSet = new DataSet();
+            do
+            {
+                retry = false;
+                try
+                {
+                    tmpDataSet.ReadXml(XmlReader.Create(new StringReader(xml_string)));
+                }
+                catch (Exception)
+                {
+                    var response = MessageBox.Show("An error occured during importing the file", "Couldn't import data", MessageBoxButtons.RetryCancel, MessageBoxIcon.Error);
+                    retry = (response == DialogResult.Retry);
+                }
+            } while (retry);
+
+            this.Clear();
+            this.DataSource = tmpDataSet;
+        }
+
         // Save
         // ...
-        
+
         // Load
         // ...
 
+        #endregion
+        #region Serialization
+        public void Serialize(string FilePathAndName)
+        {
+            bool retry = false;
+            byte[] xml_bytes;
+            do
+            {
+                retry = false;
+                try
+                {
+                    using (FileStream file = new FileStream(FilePathAndName, FileMode.Create))
+                    {
+                        using (MemoryStream ms = new MemoryStream())
+                        {
+                            this.data.WriteXml(ms);
+                            xml_bytes = ms.ToArray();
+                        }
+
+                        Cryptographer c = new Cryptographer(TEMP_TEST_MASTERKEY);
+                        string encrypted_data = c.Encrypt(xml_bytes);
+
+                        using (StreamWriter sw = new StreamWriter(file))
+                        {
+                            sw.Write(encrypted_data);
+                        }
+                    }
+                }
+                catch (Exception)
+                {
+                    var response = MessageBox.Show("An error occured during writing the file", "Couldn't write file", MessageBoxButtons.RetryCancel, MessageBoxIcon.Error);
+                    retry = (response == DialogResult.Retry);
+                }
+            } while (retry);
+        }
+        public static PasswordStorage DeSerialize(string FilePathAndName)
+        {
+            bool retry = false;
+            string encrypted_data, decrypted_data;
+            do
+            {
+                retry = false;
+                try
+                {
+                    // Read
+                    using (FileStream file = new FileStream(FilePathAndName, FileMode.Open))
+                    {
+                        using (StreamReader sr = new StreamReader(file))
+                        {
+                            encrypted_data = sr.ReadToEnd();
+                        }
+                    }
+                    // Decrypt
+                    Cryptographer c = new Cryptographer(TEMP_TEST_MASTERKEY);
+                    decrypted_data = c.Decrypt(encrypted_data);
+                    // Build tmp xml stuff
+                    PasswordStorage tmp_storage = new PasswordStorage();
+                    tmp_storage.ImportFromXmlString(decrypted_data);
+                    return tmp_storage;
+                }
+                catch (Exception)
+                {
+                    var response = MessageBox.Show("An error occured during reading the file", "Couldn't read file", MessageBoxButtons.RetryCancel, MessageBoxIcon.Error);
+                    retry = (response == DialogResult.Retry);
+                }
+            } while (retry);
+
+            return null;
+        }
         #endregion
         #region Other
         public override string ToString()
@@ -403,6 +493,18 @@ namespace PasswordManager
         {
             return (int)((Math.Ceiling(value / 10.0)) * 10.0);
         }
+
+        #endregion
+        #region Crypto-Stuff
+
+        //private void EncryptPasswords()
+        //{
+
+        //}
+        //private void DecryptPasswords()
+        //{
+
+        //}
 
         #endregion
     }
