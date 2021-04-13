@@ -12,6 +12,8 @@ namespace PasswordManager
 {
     public partial class StickyDataGridView : DataGridView
     {
+        // TODO: Make columns resizable!
+
         #region Constants
         #endregion
         #region Variables

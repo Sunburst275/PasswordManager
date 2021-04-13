@@ -50,7 +50,7 @@ namespace PasswordManager
         }
 
         /// <summary>To clear all data in the storage.</summary>
-        private void Clear()
+        public void Clear()
         {
             if (data != null)
             {
@@ -299,13 +299,8 @@ namespace PasswordManager
                 }
             } while (retry);
 
-            Console.WriteLine("Finished import:");
-            Console.WriteLine(tmpDataSet.ToString());
-
             this.Clear();
             this.DataSource = tmpDataSet;
-            Console.WriteLine("this.data = tmpDataSet:");
-            Console.WriteLine(this.ToString());
         }
         public void ImportFromXmlString(string xml_string)
         {
@@ -327,6 +322,11 @@ namespace PasswordManager
 
             this.Clear();
             this.DataSource = tmpDataSet;
+        }
+        public void ImportFromCsv(string FilePathAndName)
+        {
+            _ = MessageBox.Show("Cant import from CSV yet ¯\\_(ツ)_ /¯", "Not implemented yet", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            throw new NotImplementedException("Cant import from CSV yet ¯\\_(ツ)_/¯");
         }
 
         // Save

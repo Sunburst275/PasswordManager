@@ -1,0 +1,18 @@
+Done/Successful?	FileName 			Description
+
+Yes/Yes			dataset_exported.xml		Export to xml
+Yes/Yes			dataset_exported.xml		Import from xml (directly after export/restart)
+Yes/Yes			dataset_exported.xml		Import from xml (after clicking "New")
+	
+Yes/Yes			dataset_exported.csv		Export to csv
+
+/* THIS NEEDS TO BE IMPLEMENTED YET */
+Yes/No			dataset_exported.csv		Import from csv (directly after export/restart)
+Yes/No			dataset_exported.csv		Import from csv (after clicking "New")
+
+Yes/Yes			dataset_exported.txt		Export to txt
+
+Yes/Yes			dataset_saved.i			Saved as PW-Manager-File 
+Yes/Yes			dataset_saved.i			Loaded from PW-Manager-File (directly after saving/restart)
+Yes/Yes			dataset_saved.i			Loaded from PW-Manager-File (after clicking "New")
+

@@ -35,7 +35,7 @@ namespace PasswordManager
             this.MenuFileSave = new System.Windows.Forms.ToolStripMenuItem();
             this.MenuFileSaveAs = new System.Windows.Forms.ToolStripMenuItem();
             this.MenuFileSep1 = new System.Windows.Forms.ToolStripSeparator();
-            this.FileMenuImport = new System.Windows.Forms.ToolStripMenuItem();
+            this.MenuFileImport = new System.Windows.Forms.ToolStripMenuItem();
             this.MenuFileExport = new System.Windows.Forms.ToolStripMenuItem();
             this.MenuFileSep2 = new System.Windows.Forms.ToolStripSeparator();
             this.MenuFileExit = new System.Windows.Forms.ToolStripMenuItem();
@@ -46,7 +46,7 @@ namespace PasswordManager
             this.MenuSettings = new System.Windows.Forms.ToolStripMenuItem();
             this.MenuHelp = new System.Windows.Forms.ToolStripMenuItem();
             this.MainSplitContainer = new System.Windows.Forms.SplitContainer();
-            this.newToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.MenuFileNew = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripSeparator1 = new System.Windows.Forms.ToolStripSeparator();
             this.MainMenu.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.MainSplitContainer)).BeginInit();
@@ -72,13 +72,13 @@ namespace PasswordManager
             // MenuFile
             // 
             this.MenuFile.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.newToolStripMenuItem,
+            this.MenuFileNew,
             this.toolStripSeparator1,
             this.MenuFileLoad,
             this.MenuFileSave,
             this.MenuFileSaveAs,
             this.MenuFileSep1,
-            this.FileMenuImport,
+            this.MenuFileImport,
             this.MenuFileExport,
             this.MenuFileSep2,
             this.MenuFileExit});
@@ -114,10 +114,10 @@ namespace PasswordManager
             // 
             // FileMenuImport
             // 
-            this.FileMenuImport.Name = "FileMenuImport";
-            this.FileMenuImport.Size = new System.Drawing.Size(180, 22);
-            this.FileMenuImport.Text = "Import from ...";
-            this.FileMenuImport.Click += new System.EventHandler(this.MenuFileImport_Click);
+            this.MenuFileImport.Name = "FileMenuImport";
+            this.MenuFileImport.Size = new System.Drawing.Size(180, 22);
+            this.MenuFileImport.Text = "Import from ...";
+            this.MenuFileImport.Click += new System.EventHandler(this.MenuFileImport_Click);
             // 
             // MenuFileExport
             // 
@@ -193,10 +193,10 @@ namespace PasswordManager
             // 
             // newToolStripMenuItem
             // 
-            this.newToolStripMenuItem.Name = "newToolStripMenuItem";
-            this.newToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
-            this.newToolStripMenuItem.Text = "New";
-            this.newToolStripMenuItem.Click += new System.EventHandler(this.MenuFileNew_Click);
+            this.MenuFileNew.Name = "newToolStripMenuItem";
+            this.MenuFileNew.Size = new System.Drawing.Size(180, 22);
+            this.MenuFileNew.Text = "New";
+            this.MenuFileNew.Click += new System.EventHandler(this.MenuFileNew_Click);
             // 
             // toolStripSeparator1
             // 
@@ -241,8 +241,8 @@ namespace PasswordManager
         private System.Windows.Forms.ToolStripMenuItem MenuEditDuplicate;
         private System.Windows.Forms.ToolStripMenuItem MenuSettings;
         private System.Windows.Forms.ToolStripSeparator MenuEditSep1;
-        private System.Windows.Forms.ToolStripMenuItem FileMenuImport;
-        private System.Windows.Forms.ToolStripMenuItem newToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem MenuFileImport;
+        private System.Windows.Forms.ToolStripMenuItem MenuFileNew;
         private System.Windows.Forms.ToolStripSeparator toolStripSeparator1;
     }
 }

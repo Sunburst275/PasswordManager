@@ -1,0 +1,54 @@
+<PasswordManagerData>
+  <MetaData>
+    <Dummy>Dummy</Dummy>
+  </MetaData>
+  <PasswordData>
+    <Service>Google</Service>
+    <Password>Abc</Password>
+    <Link_x0020__x0028_URL_x0029_>https://google.com/</Link_x0020__x0028_URL_x0029_>
+    <User>Pee</User>
+    <Comments>Just a test</Comments>
+  </PasswordData>
+  <PasswordData>
+    <Service>Butter</Service>
+    <Password>vortex</Password>
+    <Link_x0020__x0028_URL_x0029_>https://butter.org/</Link_x0020__x0028_URL_x0029_>
+    <User>Geronnen</User>
+    <Comments />
+  </PasswordData>
+  <PasswordData>
+    <Service>GitHub</Service>
+    <Password>#unterhose</Password>
+    <Link_x0020__x0028_URL_x0029_>https://github.com/</Link_x0020__x0028_URL_x0029_>
+    <User>trollolll</User>
+    <Comments>not a real char</Comments>
+  </PasswordData>
+  <PasswordData>
+    <Service>1</Service>
+    <Password>2</Password>
+    <Link_x0020__x0028_URL_x0029_>3</Link_x0020__x0028_URL_x0029_>
+    <User />
+    <Comments />
+  </PasswordData>
+  <PasswordData>
+    <Service>a</Service>
+    <Password />
+    <Link_x0020__x0028_URL_x0029_ />
+    <User>x</User>
+    <Comments>x</Comments>
+  </PasswordData>
+  <PasswordData>
+    <Service />
+    <Password>b</Password>
+    <Link_x0020__x0028_URL_x0029_ />
+    <User>x</User>
+    <Comments>x</Comments>
+  </PasswordData>
+  <PasswordData>
+    <Service />
+    <Password />
+    <Link_x0020__x0028_URL_x0029_>c</Link_x0020__x0028_URL_x0029_>
+    <User>x</User>
+    <Comments>x</Comments>
+  </PasswordData>
+</PasswordManagerData>
