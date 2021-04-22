@@ -12,12 +12,43 @@ using System.Security;
 namespace PasswordManager
 {
 
+    #region IDEAS
+    // x Dateiendung: van --> Changed to *.dry
+    // - Icon: Ein Knochenschlüssel
+
+    // - Random Key gen (im Kontextmenü)
+    // - Language Support
+    // - Meta-Daten änderbar (See PasswordStorage.cs)
+    // - User kann Spaltenbreite anpassen
+    // ? User kann spalten hinzufügen
+    // - Help-File als HTML oder so
+    // - Dark-Mode?
+    // - 2-fache sicherung: pw und Datei selbst
+    // - "starter"-bat-datei erstellbar per "wizard"
+    // - undo-funktion
+    // - sauberes exception-handling
+    // - Autosave
+    // - autosave + close
+    // 
+    // - Alles asynchron machen?
+    // 
+    // - Dateiaufbau:
+    //   -> Ist PW-Geschützt (true/false)
+    //   -> (wenn ja -> Hash vom MasterKey)
+    //   -> Daten
+    //  
+    // - Wenn PW-Geschützt:
+    //   -> open masterkey-prompt -> verhashen -> check ob der mit der 2. Zeile in der Datei übereinstimmt
+
+    #endregion
+
+
     #region TODOs 
     // TODO: Settings erstellen (Registry)
     // TODO: Languages
     // TODO: Command line args
     // TODO: Help erstellen
-    // TODO: Increase security
+    // TODO: Increase security (real cryptography and dft)
 
     // DONE: Import/Export (XML, txt, csv)
     // DONE: Shortcuts
@@ -29,7 +60,7 @@ namespace PasswordManager
     public partial class MainForm : Form
     {
         #region Constants
-        static string PW_FILE_EXTENSION = ".i";
+        static string PW_FILE_EXTENSION = ".dry";
         static string[] ALLOWED_EXTENSIONS = new string[] { ".xml", ".csv", ".txt", ".*" };
         static int DEFAULT_FILTERINDEX = 1;
         #endregion
@@ -131,7 +162,17 @@ namespace PasswordManager
         private void MenuHelp_Click(object sender, EventArgs e)
         {
             Console.WriteLine("Started MenuHelp_Click(...)");
-            Console.WriteLine(this.data.ToString());
+            //Console.WriteLine(this.data.ToString());
+
+            Cryptographer c = new Cryptographer(PasswordStorage.TEMP_TEST_MASTERKEY);
+            string encr = "Test!?tseT";
+            Console.WriteLine($"{encr} => {c.Encrypt(encr)} => {c.Decrypt(c.Encrypt(encr))}");
+
+            string pp = "ppas|" + encr + "|ollse213";
+            Console.WriteLine($"RemoveSubString(...) = {PasswordStorage.RemoveSubString(pp, encr)}");
+
+
+
             Console.WriteLine("Ended   MenuHelp_Click(...)");
         }
 

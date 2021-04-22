@@ -8,6 +8,8 @@ using System.Windows.Forms;
 
 namespace PasswordManager
 {
+    // TODO: When "Failed to import/load/export/save" and Cancel is clicked, DataSet is eradicated and DataGridView has no cells anymore -> FIX!
+
     [Serializable()]
     class PasswordStorage
     {
@@ -15,7 +17,7 @@ namespace PasswordManager
         const string DataContainerName = "PasswordManagerData";
         const string MetaDataTableName = "MetaData";
         const string PasswordDataTableName = "PasswordData";
-        const string TEMP_TEST_MASTERKEY = "[1234567890)--{";
+        public const string TEMP_TEST_MASTERKEY = "[1234567890)--{";
         #endregion
         #region Properties
         public DataSet DataSource
@@ -88,6 +90,25 @@ namespace PasswordManager
             dummy.AllowDBNull = false;
             dummy.ReadOnly = true;
 
+            // Columns: 
+            // o Column "User" enabled/visible?
+            // o Column "Service" enabled/visible?
+            // o Column "Link" enabled/visible?
+            // o Column "Username" enabled/visible?
+            // o Column "E-Mail" enabled/visible?
+            // o Column "Password" enabled/visible?
+            // o Column "Comments" enabled/visible?
+            // o Ist PW-Geschützt (true/false)?
+            // o Password-Columns shows only dots or clear text?
+            // -> 
+            // -> DataSet-Name (for example "Himemis Passwörter")
+            // -> "Remarks?
+
+            // Wird in Registry gespeichert:
+            // o Dark-Mode enabled?
+            // o Autosave activated?
+            // o Autosave activated?
+
             tmpMetaDataTable.Columns.Add(dummy);
             tmpMetaDataTable.Rows.Add("Dummy");
 
@@ -101,21 +122,21 @@ namespace PasswordManager
         }
         private DataColumn[] CreatePasswordDataColumns()
         {
-            DataColumn Service = new DataColumn
+            DataColumn user = new DataColumn
+            {
+                ColumnName = "User",
+                Caption = "User",
+                AllowDBNull = true,
+                DataType = System.Type.GetType("System.String"),
+                DefaultValue = String.Empty
+            };
+            DataColumn service = new DataColumn
             {
                 ColumnName = "Service",
                 Caption = "Service",
                 AllowDBNull = false,
                 DataType = System.Type.GetType("System.String"),
                 DefaultValue = String.Empty,
-            };
-            DataColumn password = new DataColumn
-            {
-                ColumnName = "Password",
-                Caption = "Password",
-                AllowDBNull = false,
-                DataType = System.Type.GetType("System.String"),
-                DefaultValue = String.Empty
             };
             DataColumn url = new DataColumn
             {
@@ -125,11 +146,27 @@ namespace PasswordManager
                 DataType = System.Type.GetType("System.String"),
                 DefaultValue = String.Empty
             };
-            DataColumn user = new DataColumn
+            DataColumn username = new DataColumn
             {
-                ColumnName = "User",
-                Caption = "User",
+                ColumnName = "Username",
+                Caption = "Username",
                 AllowDBNull = true,
+                DataType = System.Type.GetType("System.String"),
+                DefaultValue = String.Empty
+            };
+            DataColumn email = new DataColumn
+            {
+                ColumnName = "E-Mail",
+                Caption = "E-Mail",
+                AllowDBNull = true,
+                DataType = System.Type.GetType("System.String"),
+                DefaultValue = String.Empty
+            };
+            DataColumn password = new DataColumn
+            {
+                ColumnName = "Password",
+                Caption = "Password",
+                AllowDBNull = false,
                 DataType = System.Type.GetType("System.String"),
                 DefaultValue = String.Empty
             };
@@ -158,7 +195,7 @@ namespace PasswordManager
                 DefaultValue = String.Empty,
             };
 
-            return new DataColumn[] { Service, password, url, user, comments/*, othersExisting, other*/};
+            return new DataColumn[] { user, service, url, username, email, password, comments/*, othersExisting, other*/};
         }
 
         #endregion
@@ -329,12 +366,6 @@ namespace PasswordManager
             throw new NotImplementedException("Cant import from CSV yet ¯\\_(ツ)_/¯");
         }
 
-        // Save
-        // ...
-
-        // Load
-        // ...
-
         #endregion
         #region Serialization
         public void Serialize(string FilePathAndName)
@@ -359,7 +390,9 @@ namespace PasswordManager
 
                         using (StreamWriter sw = new StreamWriter(file))
                         {
-                            sw.Write(encrypted_data);
+                            var x = Encoding.UTF8.GetString(c.MasterKeyHash);
+                            sw.WriteLine(x);
+                            sw.WriteLine(encrypted_data);
                         }
                     }
                 }
@@ -387,9 +420,16 @@ namespace PasswordManager
                             encrypted_data = sr.ReadToEnd();
                         }
                     }
-                    // Decrypt
+
                     Cryptographer c = new Cryptographer(TEMP_TEST_MASTERKEY);
+
+                    if (!encrypted_data.Contains(c.MasterKeyHashString))
+                        throw new Exception("No CryptoClearance!"); // TODO: Change to good crypto-exception and explain to user that its the wrong password when this is thrown!
+
+                    // Remove MasterKeyHash (and possible carriage returns, newlines, ...)
+                    encrypted_data = RemoveSubString(encrypted_data, c.MasterKeyHashString).Trim(new char[] { '\r', '\n' });
                     decrypted_data = c.Decrypt(encrypted_data);
+
                     // Build tmp xml stuff
                     PasswordStorage tmp_storage = new PasswordStorage();
                     tmp_storage.ImportFromXmlString(decrypted_data);
@@ -492,6 +532,38 @@ namespace PasswordManager
         public static int RoundToNextDecade(int value)
         {
             return (int)((Math.Ceiling(value / 10.0)) * 10.0);
+        }
+
+        /// <summary>Removes a substring from a string.</summary>
+        /// <param name="str">The string which has a <paramref name="substring"/> to be removed.</param>
+        /// <param name="substring">Substring that shall be removed in <paramref name="str"/>.</param>
+        /// <returns>The input string with the substring removed.</returns>
+        public static string RemoveSubString(string str, string substring)
+        {
+            var strArr = str.ToCharArray();
+            var subArr = substring.ToCharArray();
+            bool stringFound = false;
+
+            // Search for start
+            int i = 0, k = 0, equalChars = 0;
+            while ((i < strArr.Length) && ((k + subArr.Length) <= strArr.Length) && !stringFound)
+            {
+                if (strArr[i + k] == subArr[i])
+                {
+                    equalChars++;
+                    i++;
+
+                    if (equalChars == subArr.Length)
+                        stringFound = true;
+                }
+                else
+                {
+                    equalChars = i = 0;
+                    k++;
+                }
+            }
+
+            return str.Remove(k, equalChars);
         }
 
         #endregion
